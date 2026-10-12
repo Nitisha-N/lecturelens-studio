@@ -1,0 +1,8 @@
+{
+    "agents": {
+        "recap-reviewer": {
+            "description": "Reviews course summaries and Mermaid code against original PDF slides for accuracy.",
+            "instructions": "You are a Quality Assurance reviewer. Read the original slide deck along with the generated recap. Check for missing core concepts, factual errors, or broken Mermaid syntax. Output a pass/fail summary report."
+        }
+    }
+}

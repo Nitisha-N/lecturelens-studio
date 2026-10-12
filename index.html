@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LectureLens Studio | Slide Deck Summaries & Mermaid Diagrams</title>
+  <meta name="description" content="Transform lecture slide decks into structured recaps, key concept glossaries, and visual Mermaid diagrams.">
+  
+  <!-- Google Fonts & CDN libraries -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <div id="app" class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8"/><path d="M8 11h6"/></svg>
+        </div>
+        <div>
+          <h1>LectureLens <span>Studio</span></h1>
+          <p class="subtitle">Turn lecture slides into recaps, glossaries & diagrams</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="sampleDeckBtn" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Try Demo Deck
+        </button>
+        <button id="apiKeyModalBtn" class="btn btn-secondary" title="Configure API Key">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          Settings
+        </button>
+        <button id="exportBtn" class="btn btn-primary" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Recap
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-workspace">
+      <!-- Upload Dropzone (shown initially) -->
+      <section id="uploadSection" class="upload-section">
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-badge">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <h2>Drop Your Lecture PDFs</h2>
+          <p>Drag and drop your lecture presentation PDFs (single or multiple files) or click to browse</p>
+          <input type="file" id="pdfFileInput" accept="application/pdf" multiple class="file-input">
+          <div class="upload-hints">
+            <span>✓ Supports Multi-PDF Slide Decks</span>
+            <span>✓ Batch Slide Extraction</span>
+            <span>✓ Renders Dynamic Mermaid Diagrams</span>
+          </div>
+        </div>
+
+        <div class="demo-card">
+          <div class="demo-card-content">
+            <h3>Try with Demo Course Decks</h3>
+            <p>Don't have a PDF ready? Experience instant recap synthesis with our curated samples:</p>
+            <div class="demo-buttons">
+              <button class="demo-chip" data-sample="neural_nets">🧠 Machine Learning & Neural Networks</button>
+              <button class="demo-chip" data-sample="db_systems">🗄️ Database Systems & SQL Optimization</button>
+              <button class="demo-chip" data-sample="cloud_arch">☁️ Distributed Systems & Microservices</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Processing Progress View -->
+      <section id="processingSection" class="processing-section hidden">
+        <div class="loader-card">
+          <div class="spinner"></div>
+          <h2 id="processingStatusText">Extracting Slide Deck Content...</h2>
+          <p id="processingDetailText">Parsing slide text, bullet structures, and code snippets</p>
+          <div class="progress-bar-track">
+            <div id="progressBarFill" class="progress-bar-fill"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Split Review Dashboard (Shown after extraction & generation) -->
+      <section id="dashboardSection" class="dashboard-section hidden">
+        <!-- Sidebar Navigation / Slide Inspector -->
+        <aside class="slide-inspector">
+          <div class="inspector-header">
+            <h3>Slide Deck Inspector</h3>
+            <span id="slideCountBadge" class="badge">0 Slides</span>
+          </div>
+
+          <div class="inspector-tabs">
+            <button class="tab-btn active" data-tab="slidesTab">Slides</button>
+            <button class="tab-btn" data-tab="extractedTab">Raw Text</button>
+          </div>
+
+          <div id="slidesTab" class="tab-content active">
+            <div id="slideList" class="slide-list">
+              <!-- Dynamically populated slide thumbnails/cards -->
+            </div>
+          </div>
+
+          <div id="extractedTab" class="tab-content">
+            <pre id="rawTextContent" class="raw-text-box">Extracted text will appear here...</pre>
+          </div>
+        </aside>
+
+        <!-- Right Main View: Generated Recap & Diagrams -->
+        <div class="recap-viewport">
+          <!-- Overview Header Banner -->
+          <div class="overview-banner card">
+            <div class="banner-main">
+              <span class="tag">Course Overview</span>
+              <h2 id="courseTitle">Course Title</h2>
+              <p id="courseOverview">Overview text will appear here...</p>
+            </div>
+
+            <div class="stats-grid">
+              <div class="stat-box">
+                <div class="stat-value" id="statSlides">0</div>
+                <div class="stat-label">Slides Analyzed</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value" id="statModules">0</div>
+                <div class="stat-label">Modules</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value" id="statConcepts">0</div>
+                <div class="stat-label">Key Terms</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value" id="statDiagrams">0</div>
+                <div class="stat-label">Mermaid Views</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section Tabs -->
+          <div class="view-mode-bar">
+            <button class="view-tab-btn active" data-view="diagramsView">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+              Mermaid Diagrams
+            </button>
+            <button class="view-tab-btn" data-view="modulesView">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              Structured Modules & Key Terms
+            </button>
+            <button class="view-tab-btn" data-view="quizView">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Review Quiz
+            </button>
+
+            <div class="approval-progress">
+              <span id="approvalText">0 of 0 Modules Reviewed</span>
+              <div class="progress-bar-small">
+                <div id="approvalBarFill" class="progress-fill-small"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Diagrams View -->
+          <div id="diagramsView" class="view-pane active">
+            <div class="pane-header">
+              <div>
+                <h3>Interactive Visual Diagrams</h3>
+                <p>Mermaid charts mapping course structure and process workflows</p>
+              </div>
+              <button id="regenerateDiagramsBtn" class="btn btn-sm btn-secondary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                Regenerate Diagrams
+              </button>
+            </div>
+
+            <div id="diagramsContainer" class="diagrams-grid">
+              <!-- Dynamically populated mermaid cards -->
+            </div>
+          </div>
+
+          <!-- Modules & Key Terms View -->
+          <div id="modulesView" class="view-pane hidden">
+            <div class="pane-header">
+              <div>
+                <h3>Module Breakdowns & Glossary</h3>
+                <p>Detailed summaries, terms, and code snippets extracted per topic section</p>
+              </div>
+            </div>
+
+            <div id="modulesContainer" class="modules-stack">
+              <!-- Dynamically populated module review cards -->
+            </div>
+          </div>
+
+          <!-- Quiz View -->
+          <div id="quizView" class="view-pane hidden">
+            <div class="pane-header">
+              <div>
+                <h3>Self-Assessment Review Questions</h3>
+                <p>Test your comprehension of core slide concepts</p>
+              </div>
+            </div>
+
+            <div id="quizContainer" class="quiz-stack">
+              <!-- Dynamically populated quiz cards -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Tool Settings & API Config</h3>
+          <button id="closeModalBtn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="geminiApiKeyInput">Google Gemini API Key (Optional)</label>
+            <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." class="text-input">
+            <p class="form-hint">Leave blank to use built-in offline extraction engine, or paste your API key for advanced Gemini LLM synthesis.</p>
+          </div>
+          <div class="form-group">
+            <label for="customPromptInput">Custom Prompt Instructions</label>
+            <textarea id="customPromptInput" rows="3" class="text-input" placeholder="e.g. Focus on mathematical proofs, python snippets, and conceptual mindmaps."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="saveSettingsBtn" class="btn btn-primary">Save Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="modal-backdrop hidden">
+      <div class="modal-card modal-lg">
+        <div class="modal-header">
+          <h3>Export Course Recap</h3>
+          <button id="closeExportModalBtn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="export-tabs">
+            <button class="tab-btn active" data-export-tab="mdExportTab">Markdown (.md)</button>
+            <button class="tab-btn" data-export-tab="htmlExportTab">Standalone HTML</button>
+            <button class="tab-btn" data-export-tab="jsonExportTab">JSON Data</button>
+          </div>
+
+          <div id="mdExportTab" class="export-tab-pane active">
+            <textarea id="mdExportPreview" class="code-preview" readonly></textarea>
+          </div>
+
+          <div id="htmlExportTab" class="export-tab-pane hidden">
+            <textarea id="htmlExportPreview" class="code-preview" readonly></textarea>
+          </div>
+
+          <div id="jsonExportTab" class="export-tab-pane hidden">
+            <textarea id="jsonExportPreview" class="code-preview" readonly></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="downloadFileBtn" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Export File
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/app.js"></script>
+</body>
+</html>

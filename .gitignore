@@ -1,0 +1,12 @@
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.env
+scratch/
+.system_generated/
+
+.env
+.venv/
+venv/
+.DS_Store
