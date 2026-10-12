@@ -1,9 +1,6 @@
 # LectureLens Studio 🔍🎓
 
 Turn lecture slide-deck PDFs into structured recaps, key-term glossaries, Mermaid diagrams (mindmap + flowchart) and review quizzes — with an interactive dashboard and Markdown / HTML / JSON export.
-
-> Based on the open-source *GENAI--COURSE-RECAP-GENERATOR* project, with a new brand, teal theme, portable config and bug fixes. Credit the original author when sharing.
-
 ## Features
 - Multi-PDF upload (drag & drop) with in-browser parsing via pdf.js
 - Module breakdowns, key-term glossary, code/formula extraction
